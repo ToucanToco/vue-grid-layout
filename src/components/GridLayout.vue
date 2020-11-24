@@ -21,6 +21,7 @@
     const elementResizeDetectorMaker = require("element-resize-detector");
 
     import {bottom, compact, getLayoutItem, moveElement, validateLayout, cloneLayout, getAllCollisions} from '@/helpers/utils';
+    import {getEmptyPlaceholders} from '@/helpers/emptyPlaceholdersUtils';
     import {getBreakpointFromWidth, getColsFromBreakpoint, findOrGenerateResponsiveLayout} from "@/helpers/responsiveUtils";
     //var eventBus = require('./eventBus');
 
@@ -149,6 +150,12 @@
             self.eventBus.$on('dragEvent', self.dragEventHandler);
             self.$emit('layout-created', self.layout);
         },
+        computed: {
+            emptyPlaceholders() {
+                const numberOfColumns = getColsFromBreakpoint(this.lastBreakpoint, this.cols);
+                return getEmptyPlaceholders(this.layout, numberOfColumns); 
+            }
+        },
         beforeDestroy: function(){
             //Remove listeners
             this.eventBus.$off('resizeEvent', this.resizeEventHandler);
@@ -231,6 +238,7 @@
             },
             layout: function () {
                 this.layoutUpdate();
+                this.$emit('placeholders-updated', this.emptyPlaceholders)
             },
             colNum: function (val) {
                 this.eventBus.$emit("setColNum", val);
@@ -339,6 +347,8 @@
                 this.eventBus.$emit("compact");
                 this.updateHeight();
                 if (eventName === 'dragend') this.$emit('layout-updated', this.layout);
+                
+                this.$emit('placeholders-updated', this.emptyPlaceholders)
             },
             resizeEvent: function (eventName, id, x, y, h, w) {
                 let l = getLayoutItem(this.layout, id);
